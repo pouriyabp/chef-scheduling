@@ -61,6 +61,8 @@ def check_do_order(list_of_food, chef_time):
 def earliest_deadline_first(list_of_foods, chef_time):
     i = 0
     idle_time = 0
+    change_between_foods = 0
+    last_food = None
     temp_list = list_of_foods.copy()
     while i < chef_time:
         if len(temp_list) == 0:
@@ -74,6 +76,9 @@ def earliest_deadline_first(list_of_foods, chef_time):
             continue
         # find minimum deadline between foods
         min_food = min(temp_list, key=attrgetter('tempDeadline'))
+        last_food = min_food
+        if min_food != last_food and last_food.tempCook != last_food.cookTime:
+            change_between_foods += 1
         # cook that food with minimum deadline
         print(f"{i} {min_food.name}.")
         min_food.tempCook -= 1
@@ -81,14 +86,14 @@ def earliest_deadline_first(list_of_foods, chef_time):
         if min_food.tempCook == 0:
             min_food.tempDeadline = min_food.deadline
             min_food.tempCook = min_food.cookTime
-            min_food.waitingTime += ( (i+1) - min_food.lastEnter) - min_food.cookTime
+            min_food.waitingTime += ((i + 1) - min_food.lastEnter) - min_food.cookTime
             temp_list.remove(min_food)
 
         i += 1
         for food in list_of_foods:
             if i % food.period == 0:
                 # print(f"{i} {food.name} come.")
-                food.lastEnter = i 
+                food.lastEnter = i
                 # print(f"{food.name} enter {food.lastEnter}")
                 temp_list.append(food)
         # like ageing increase priority each round with -1 deadline
@@ -98,7 +103,8 @@ def earliest_deadline_first(list_of_foods, chef_time):
                 print(f"{i} {food.name} miss the deadline.")
     print(f"idle time = {idle_time}")
     for food in list_of_foods:
-        print(f"{food.name} waiting time = {food.waitingTime}")
+        print(f"{food.name} waiting time = {food.waitingTime}.")
+    print(f"change between foods is {change_between_foods}.")
 
 
 food1 = Food("Food1", 2, 2, 8)
