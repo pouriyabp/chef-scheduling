@@ -9,6 +9,7 @@ class Food:
         self.period = int(period)
         self.tempDeadline = int(deadline)
         self.tempCook = int(cook_time)
+        self.missFood = int(deadline)
         self.waitingTime = 0
         self.lastEnter = 0
 
@@ -50,7 +51,7 @@ def check_do_order(list_of_food, chef_time):
     """
     result = 0
     for food in list_of_food:
-        count = food.period / chef_time
+        count = chef_time / food.period
         result += food.cookTime * count
     if result <= chef_time:
         return True
@@ -86,22 +87,26 @@ def earliest_deadline_first(list_of_foods, chef_time):
         if min_food.tempCook == 0:
             min_food.tempDeadline = min_food.deadline
             min_food.tempCook = min_food.cookTime
+            min_food.missFood = min_food.deadline
             min_food.waitingTime += ((i + 1) - min_food.lastEnter) - min_food.cookTime
             temp_list.remove(min_food)
-
+        # like ageing increase priority each round with -1 deadline
+        for food in temp_list:
+            # if want to remove ageing ---> only need to comment below line
+            food.tempDeadline -= 1
+            food.missFood -= 1
+            if food.missFood == 0:
+                print(f"{i} {food.name} miss the deadline.")
         i += 1
+        # add food that must come every period
         for food in list_of_foods:
             if i % food.period == 0:
                 # print(f"{i} {food.name} come.")
                 food.lastEnter = i
                 # print(f"{food.name} enter {food.lastEnter}")
                 temp_list.append(food)
-        # like ageing increase priority each round with -1 deadline
-        for food in temp_list:
-            food.tempDeadline -= 1
-            if food.tempDeadline == -1:
-                print(f"{i} {food.name} miss the deadline.")
-    print(f"idle time = {idle_time}")
+
+    print(f"idle time = {idle_time}.")
     for food in list_of_foods:
         print(f"{food.name} waiting time = {food.waitingTime}.")
     print(f"change between foods is {change_between_foods}.")
@@ -125,3 +130,11 @@ if check_do_order(arr_of_foods, chef_time_spend) is False:
 print(f"the chef must be in kitchen for {chef_time_spend} period")
 print(f"chef can do this order? {check_do_order(arr_of_foods, chef_time_spend)}")
 earliest_deadline_first(arr_of_foods, chef_time_spend)
+
+# # other input
+# food1 = Food("Food1", 1, 4, 8)
+# food2 = Food("Food2", 2, 2, 5)
+# food3 = Food("Food3", 4, 5, 10)
+# food4 = Food("Food4", 2, 3, 40)
+# # list for store foods
+# arr_of_foods = [food1, food2, food3, food4]
