@@ -9,6 +9,8 @@ class Food:
         self.period = int(period)
         self.tempDeadline = int(deadline)
         self.tempCook = int(cook_time)
+        self.waitingTime = 0
+        self.lastEnter = 0
 
     def __repr__(self):
         return f"{self.name} tempdeadline={self.tempDeadline}"
@@ -79,12 +81,15 @@ def earliest_deadline_first(list_of_foods, chef_time):
         if min_food.tempCook == 0:
             min_food.tempDeadline = min_food.deadline
             min_food.tempCook = min_food.cookTime
+            min_food.waitingTime += ( (i+1) - min_food.lastEnter) - min_food.cookTime
             temp_list.remove(min_food)
 
         i += 1
         for food in list_of_foods:
             if i % food.period == 0:
                 # print(f"{i} {food.name} come.")
+                food.lastEnter = i 
+                # print(f"{food.name} enter {food.lastEnter}")
                 temp_list.append(food)
         # like ageing increase priority each round with -1 deadline
         for food in temp_list:
@@ -92,6 +97,8 @@ def earliest_deadline_first(list_of_foods, chef_time):
             if food.tempDeadline == -1:
                 print(f"{i} {food.name} miss the deadline.")
     print(f"idle time = {idle_time}")
+    for food in list_of_foods:
+        print(f"{food.name} waiting time = {food.waitingTime}")
 
 
 food1 = Food("Food1", 2, 2, 8)
