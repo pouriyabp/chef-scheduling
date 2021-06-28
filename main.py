@@ -4,17 +4,25 @@ from operator import attrgetter
 class Food:
     def __init__(self, name, cook_time, deadline, period):
         self.name = name
-        self.cookTime = int(cook_time)
-        self.deadline = int(deadline)
-        self.period = int(period)
-        self.tempDeadline = int(deadline)
-        self.tempCook = int(cook_time)
-        self.missFood = int(deadline)
-        self.waitingTime = 0
-        self.lastEnter = 0
+        self.cookTime = int(cook_time)  # original data that user input
+        self.deadline = int(deadline)  # original data that user input
+        self.period = int(period)  # original data that user input
+        self.tempDeadline = int(deadline)  # change this without original data changed
+        self.tempCook = int(cook_time)  # change this without original data changed
+        self.missFood = int(deadline)  # for check deadline is missed or not
+        self.waitingTime = 0  # use this for calculate waiting time
+        self.lastEnter = 0  # use this (and tempCook) for calculate change between foods
 
     def __repr__(self):
-        return f"{self.name} tempdeadline={self.tempDeadline}"
+        return f"{self.name}"
+
+    # initializer (for each scheduling function we should use this)
+    def set_value(self):
+        self.lastEnter = 0
+        self.waitingTime = 0
+        self.missFood = int(self.deadline)
+        self.tempCook = int(self.cookTime)
+        self.tempDeadline = int(self.deadline)
 
 
 def lcm(x, y):
@@ -59,11 +67,70 @@ def check_do_order(list_of_food, chef_time):
         return False
 
 
-def earliest_deadline_first(list_of_foods, chef_time):
+def rate_monotonic(list_of_foods, chef_time):
+    print(60 * "*")
+    print("Rate monotonic")
+    # set value
+    for food in list_of_foods:
+        food.set_value()
     i = 0
     idle_time = 0
     change_between_foods = 0
-    last_food = None
+    temp_list = list_of_foods.copy()
+    while i < chef_time:
+        print(temp_list)
+        if len(temp_list) == 0:
+            print(f"{i} Idle.")
+            idle_time += 1
+            i += 1
+            for food in list_of_foods:
+                if i % food.period == 0:
+                    # print(f"{i} {food.name} come.")
+                    temp_list.append(food)
+            continue
+        # find minimum deadline between foods
+        min_food = min(temp_list, key=attrgetter('period'))
+        last_food = min_food
+        if min_food != last_food and last_food.tempCook != last_food.cookTime:
+            change_between_foods += 1
+        # cook that food with minimum deadline
+        print(f"{i} {min_food.name}.")
+        min_food.tempCook -= 1
+        # remove food if it's done
+        if min_food.tempCook == 0:
+            min_food.tempDeadline = min_food.deadline
+            min_food.tempCook = min_food.cookTime
+            min_food.missFood = min_food.deadline
+            min_food.waitingTime += ((i + 1) - min_food.lastEnter) - min_food.cookTime
+            temp_list.remove(min_food)
+        for food in temp_list:
+            food.missFood -= 1
+            if food.missFood == 0:
+                print(f"{i} {food.name} miss the deadline.")
+        i += 1
+        # add food that must come every period
+        for food in list_of_foods:
+            if i % food.period == 0:
+                # print(f"{i} {food.name} come.")
+                food.lastEnter = i
+                # print(f"{food.name} enter {food.lastEnter}")
+                temp_list.append(food)
+
+    print(f"idle time = {idle_time}.")
+    for food in list_of_foods:
+        print(f"{food.name} waiting time = {food.waitingTime}.")
+    print(f"change between foods is {change_between_foods}.")
+
+
+def earliest_deadline_first(list_of_foods, chef_time):
+    print(60 * "*")
+    print("Earliest deadline first")
+    # set value
+    for food in list_of_foods:
+        food.set_value()
+    i = 0
+    idle_time = 0
+    change_between_foods = 0
     temp_list = list_of_foods.copy()
     while i < chef_time:
         if len(temp_list) == 0:
@@ -130,7 +197,7 @@ if check_do_order(arr_of_foods, chef_time_spend) is False:
 print(f"the chef must be in kitchen for {chef_time_spend} period")
 print(f"chef can do this order? {check_do_order(arr_of_foods, chef_time_spend)}")
 earliest_deadline_first(arr_of_foods, chef_time_spend)
-
+rate_monotonic(arr_of_foods, chef_time_spend)
 # # other input
 # food1 = Food("Food1", 1, 4, 8)
 # food2 = Food("Food2", 2, 2, 5)
@@ -138,3 +205,11 @@ earliest_deadline_first(arr_of_foods, chef_time_spend)
 # food4 = Food("Food4", 2, 3, 40)
 # # list for store foods
 # arr_of_foods = [food1, food2, food3, food4]
+
+#---------------------------------------------
+# food1 = Food("Food1", 3, 2, 20)
+# food2 = Food("Food2", 2, 3, 5)
+# food3 = Food("Food3", 2, 6, 10)
+#
+# # list for store foods
+# arr_of_foods = [food1, food2, food3]
