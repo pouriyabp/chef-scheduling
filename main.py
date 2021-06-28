@@ -97,8 +97,11 @@ def least_laxity_first(list_of_foods, chef_time):
             food.set_priority_for_llf()
         # find food with minimum priority
         min_food = min(temp_list, key=attrgetter('priority'))
-        last_food = min_food
-        if min_food != last_food and last_food.tempCook != last_food.cookTime:
+        # calculate change food
+        if i == 0:
+            pass
+        elif min_food != last_food and last_food.tempCook != last_food.cookTime:
+            print(f"Chef change food in round {i}")
             change_between_foods += 1
         # cook that food with minimum priority
         print(f"{i} {min_food.name}.")
@@ -117,6 +120,8 @@ def least_laxity_first(list_of_foods, chef_time):
             food.missFood -= 1
             if food.missFood == 0:
                 print(f"{i} {food.name} miss the deadline.")
+            # set min_food as last_food that we use in calculate change between foods
+            last_food = min_food
         i += 1
         # add food that must come every period
         for food in list_of_foods:
@@ -155,8 +160,11 @@ def rate_monotonic(list_of_foods, chef_time):
             continue
         # find minimum period between foods
         min_food = min(temp_list, key=attrgetter('period'))
-        last_food = min_food
-        if min_food != last_food and last_food.tempCook != last_food.cookTime:
+        # calculate change food
+        if i == 0:
+            pass
+        elif min_food != last_food and last_food.tempCook != last_food.cookTime:
+            print(f"Chef change food in round {i}")
             change_between_foods += 1
         # cook that food with minimum period
         print(f"{i} {min_food.name}.")
@@ -174,6 +182,8 @@ def rate_monotonic(list_of_foods, chef_time):
             food.missFood -= 1
             if food.missFood == 0:
                 print(f"{i} {food.name} miss the deadline.")
+        # set min_food as last_food that we use in calculate change between foods
+        last_food = min_food
         i += 1
         # add food that must come every period
         for food in list_of_foods:
@@ -212,8 +222,11 @@ def earliest_deadline_first(list_of_foods, chef_time):
             continue
         # find minimum deadline between foods
         min_food = min(temp_list, key=attrgetter('tempDeadline'))
-        last_food = min_food
-        if min_food != last_food and last_food.tempCook != last_food.cookTime:
+        # calculate change food
+        if i == 0:
+            pass
+        elif min_food != last_food and last_food.tempCook != last_food.cookTime:
+            print(f"Chef change food in round {i}")
             change_between_foods += 1
         # cook that food with minimum deadline
         print(f"{i} {min_food.name}.")
@@ -232,6 +245,8 @@ def earliest_deadline_first(list_of_foods, chef_time):
             food.missFood -= 1
             if food.missFood == 0:
                 print(f"{i} {food.name} miss the deadline.")
+        # set min_food as last_food that we use in calculate change between foods
+        last_food = min_food
         i += 1
         # add food that must come every period
         for food in list_of_foods:
@@ -296,6 +311,14 @@ least_laxity_first(arr_of_foods, chef_time_spend)
 # food1 = Food("Food1", 3, 7, 20)
 # food2 = Food("Food2", 2, 4, 5)
 # food3 = Food("Food3", 2, 8, 10)
+#
+# # list for store foods
+# arr_of_foods = [food1, food2, food3]
+
+# -----------------------------------------
+# food1 = Food("Food1", 2, 6, 6)
+# food2 = Food("Food2", 2, 8, 8)
+# food3 = Food("Food3", 3, 10, 10)
 #
 # # list for store foods
 # arr_of_foods = [food1, food2, food3]
