@@ -12,17 +12,22 @@ class Food:
         self.missFood = int(deadline)  # for check deadline is missed or not
         self.waitingTime = 0  # use this for calculate waiting time
         self.lastEnter = 0  # use this (and tempCook) for calculate change between foods
+        self.priority = 0  # set food priority
 
     def __repr__(self):
         return f"{self.name}"
 
     # initializer (for each scheduling function we should use this)
     def set_value(self):
+        self.priority = 0
         self.lastEnter = 0
         self.waitingTime = 0
         self.missFood = int(self.deadline)
         self.tempCook = int(self.cookTime)
         self.tempDeadline = int(self.deadline)
+
+    def set_priority_for_llf(self):
+        self.priority = self.tempDeadline - self.tempCook
 
 
 def lcm(x, y):
@@ -67,6 +72,66 @@ def check_do_order(list_of_food, chef_time):
         return False
 
 
+def least_laxity_first(list_of_foods, chef_time):
+    print(60 * "*")
+    print("Least laxity first")
+    # set value
+    for food in list_of_foods:
+        food.set_value()
+    i = 0
+    idle_time = 0
+    change_between_foods = 0
+    temp_list = list_of_foods.copy()
+    while i < chef_time:
+        # check if list is empty print idle and add new foods
+        if len(temp_list) == 0:
+            print(f"{i} Idle.")
+            idle_time += 1
+            i += 1
+            for food in list_of_foods:
+                if i % food.period == 0:
+                    # print(f"{i} {food.name} come.")
+                    temp_list.append(food)
+            continue
+        for food in list_of_foods:
+            food.set_priority_for_llf()
+        # find food with minimum priority
+        min_food = min(temp_list, key=attrgetter('priority'))
+        last_food = min_food
+        if min_food != last_food and last_food.tempCook != last_food.cookTime:
+            change_between_foods += 1
+        # cook that food with minimum priority
+        print(f"{i} {min_food.name}.")
+        min_food.tempCook -= 1
+        # remove food if it's done
+        if min_food.tempCook == 0:
+            min_food.priority = 0
+            min_food.tempDeadline = min_food.deadline
+            min_food.tempCook = min_food.cookTime
+            min_food.missFood = min_food.deadline
+            min_food.waitingTime += ((i + 1) - min_food.lastEnter) - min_food.cookTime
+            temp_list.remove(min_food)
+        for food in temp_list:
+            # use this for predict miss deadline food
+            food.tempDeadline -= 1
+            food.missFood -= 1
+            if food.missFood == 0:
+                print(f"{i} {food.name} miss the deadline.")
+        i += 1
+        # add food that must come every period
+        for food in list_of_foods:
+            if i % food.period == 0:
+                # print(f"{i} {food.name} come.")
+                food.lastEnter = i
+                # print(f"{food.name} enter {food.lastEnter}")
+                temp_list.append(food)
+
+    print(f"idle time = {idle_time}.")
+    for food in list_of_foods:
+        print(f"{food.name} waiting time = {food.waitingTime}.")
+    print(f"change between foods is {change_between_foods}.")
+
+
 def rate_monotonic(list_of_foods, chef_time):
     print(60 * "*")
     print("Rate monotonic")
@@ -78,7 +143,7 @@ def rate_monotonic(list_of_foods, chef_time):
     change_between_foods = 0
     temp_list = list_of_foods.copy()
     while i < chef_time:
-        print(temp_list)
+        # check if list is empty print idle and add new foods
         if len(temp_list) == 0:
             print(f"{i} Idle.")
             idle_time += 1
@@ -88,12 +153,12 @@ def rate_monotonic(list_of_foods, chef_time):
                     # print(f"{i} {food.name} come.")
                     temp_list.append(food)
             continue
-        # find minimum deadline between foods
+        # find minimum period between foods
         min_food = min(temp_list, key=attrgetter('period'))
         last_food = min_food
         if min_food != last_food and last_food.tempCook != last_food.cookTime:
             change_between_foods += 1
-        # cook that food with minimum deadline
+        # cook that food with minimum period
         print(f"{i} {min_food.name}.")
         min_food.tempCook -= 1
         # remove food if it's done
@@ -104,6 +169,8 @@ def rate_monotonic(list_of_foods, chef_time):
             min_food.waitingTime += ((i + 1) - min_food.lastEnter) - min_food.cookTime
             temp_list.remove(min_food)
         for food in temp_list:
+            # use this for predict miss deadline food
+            food.tempDeadline -= 1
             food.missFood -= 1
             if food.missFood == 0:
                 print(f"{i} {food.name} miss the deadline.")
@@ -133,6 +200,7 @@ def earliest_deadline_first(list_of_foods, chef_time):
     change_between_foods = 0
     temp_list = list_of_foods.copy()
     while i < chef_time:
+        # check if list is empty print idle and add new foods
         if len(temp_list) == 0:
             print(f"{i} Idle.")
             idle_time += 1
@@ -198,6 +266,8 @@ print(f"the chef must be in kitchen for {chef_time_spend} period")
 print(f"chef can do this order? {check_do_order(arr_of_foods, chef_time_spend)}")
 earliest_deadline_first(arr_of_foods, chef_time_spend)
 rate_monotonic(arr_of_foods, chef_time_spend)
+least_laxity_first(arr_of_foods, chef_time_spend)
+# ----------------------------------------------------------------------------------------------------------------------
 # # other input
 # food1 = Food("Food1", 1, 4, 8)
 # food2 = Food("Food2", 2, 2, 5)
@@ -206,10 +276,26 @@ rate_monotonic(arr_of_foods, chef_time_spend)
 # # list for store foods
 # arr_of_foods = [food1, food2, food3, food4]
 
-#---------------------------------------------
+# ---------------------------------------------
 # food1 = Food("Food1", 3, 2, 20)
 # food2 = Food("Food2", 2, 3, 5)
 # food3 = Food("Food3", 2, 6, 10)
+#
+# # list for store foods
+# arr_of_foods = [food1, food2, food3]
+
+# ------------------------------------------
+# food1 = Food("Food1", 3, 7, 20)
+# food2 = Food("Food2", 2, 4, 5)
+# food3 = Food("Food3", 2, 8, 10)
+#
+# # list for store foods
+# arr_of_foods = [food1, food2, food3]
+
+# ------------------------------------------
+# food1 = Food("Food1", 3, 7, 20)
+# food2 = Food("Food2", 2, 4, 5)
+# food3 = Food("Food3", 2, 8, 10)
 #
 # # list for store foods
 # arr_of_foods = [food1, food2, food3]
