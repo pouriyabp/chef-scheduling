@@ -31,6 +31,12 @@ class Food:
     def set_priority_for_llf(self):
         self.priority = self.tempDeadline - self.tempCook
 
+    def set_priority_for_edf(self):
+        self.priority = self.tempDeadline
+
+    def set_priority_for_rate_monotonic(self):
+        self.priority = self.period
+
 
 def lcm(x, y):
     if x > y:
@@ -75,8 +81,25 @@ def check_do_order(list_of_food, chef_time):
 
 
 def predict_miss_deadline(list_temp_foods, round):
+    """
+    this function predict the food that miss the deadline.
+    first we calculate how many food have better priority than the food we choose.
+    then we use that number and tempDeadline for that food and compare it with tempCook.
+    with this compare we can understand that our food will miss the deadline or not.
+    :param list_temp_foods: list of foods that are in come and wait for cooked.
+    :param round: the round that we try to predict for find the miss food.
+    :return: nothing return ---> print in terminal.
+    """
     for food in list_temp_foods:
-        if food.tempDeadline < food.tempCook and food.predict is False:
+        food_with_better_priority = 0
+        for otherfood in list_temp_foods:
+            if otherfood == food:
+                continue
+            elif otherfood.priority < food.priority:
+                food_with_better_priority += 1
+            else:
+                continue
+        if food.tempDeadline - food_with_better_priority < food.tempCook and food.predict is False:
             print(f"{round} {food.name} will miss the deadline.")
             food.predict = True
 
@@ -93,8 +116,6 @@ def least_laxity_first(list_of_foods, chef_time):
     temp_list = list_of_foods.copy()
     last_food = None
     while i < chef_time:
-        # predict miss foods
-        predict_miss_deadline(temp_list, i)
         # check if list is empty print idle and add new foods
         if len(temp_list) == 0:
             print(f"{i} Idle.")
@@ -134,7 +155,9 @@ def least_laxity_first(list_of_foods, chef_time):
             if food.missFood == 0:
                 print(f"{i} {food.name} miss the deadline.")
             # set min_food as last_food that we use in calculate change between foods
-            last_food = min_food
+        last_food = min_food
+        # predict miss foods
+        predict_miss_deadline(temp_list, i)
         i += 1
         # add food that must come every period
         for food in list_of_foods:
@@ -162,8 +185,6 @@ def rate_monotonic(list_of_foods, chef_time):
     temp_list = list_of_foods.copy()
     last_food = None
     while i < chef_time:
-        # predict miss foods
-        predict_miss_deadline(temp_list, i)
         # check if list is empty print idle and add new foods
         if len(temp_list) == 0:
             print(f"{i} Idle.")
@@ -174,6 +195,8 @@ def rate_monotonic(list_of_foods, chef_time):
                     # print(f"{i} {food.name} come.")
                     temp_list.append(food)
             continue
+        for food in list_of_foods:
+            food.set_priority_for_rate_monotonic()
         # find minimum period between foods
         min_food = min(temp_list, key=attrgetter('period'))
         # calculate change food
@@ -202,6 +225,8 @@ def rate_monotonic(list_of_foods, chef_time):
                 print(f"{i} {food.name} miss the deadline.")
         # set min_food as last_food that we use in calculate change between foods
         last_food = min_food
+        # predict miss foods
+        predict_miss_deadline(temp_list, i)
         i += 1
         # add food that must come every period
         for food in list_of_foods:
@@ -229,8 +254,7 @@ def earliest_deadline_first(list_of_foods, chef_time):
     temp_list = list_of_foods.copy()
     last_food = None
     while i < chef_time:
-        # predict miss foods
-        predict_miss_deadline(temp_list, i)
+
         # check if list is empty print idle and add new foods
         if len(temp_list) == 0:
             print(f"{i} Idle.")
@@ -241,6 +265,8 @@ def earliest_deadline_first(list_of_foods, chef_time):
                     # print(f"{i} {food.name} come.")
                     temp_list.append(food)
             continue
+        for food in list_of_foods:
+            food.set_priority_for_edf()
         # find minimum deadline between foods
         min_food = min(temp_list, key=attrgetter('tempDeadline'))
         # calculate change food
@@ -270,6 +296,8 @@ def earliest_deadline_first(list_of_foods, chef_time):
                 print(f"{i} {food.name} miss the deadline.")
         # set min_food as last_food that we use in calculate change between foods
         last_food = min_food
+        # predict miss foods
+        predict_miss_deadline(temp_list, i)
         i += 1
         # add food that must come every period
         for food in list_of_foods:
