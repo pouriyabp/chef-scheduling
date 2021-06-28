@@ -13,12 +13,14 @@ class Food:
         self.waitingTime = 0  # use this for calculate waiting time
         self.lastEnter = 0  # use this (and tempCook) for calculate change between foods
         self.priority = 0  # set food priority
+        self.predict = False  # for predict deadline ---> if true means we predict for this food
 
     def __repr__(self):
         return f"{self.name}"
 
     # initializer (for each scheduling function we should use this)
     def set_value(self):
+        self.predict = False
         self.priority = 0
         self.lastEnter = 0
         self.waitingTime = 0
@@ -72,6 +74,13 @@ def check_do_order(list_of_food, chef_time):
         return False
 
 
+def predict_miss_deadline(list_temp_foods, round):
+    for food in list_temp_foods:
+        if food.tempDeadline < food.tempCook and food.predict is False:
+            print(f"{round} {food.name} will miss the deadline.")
+            food.predict = True
+
+
 def least_laxity_first(list_of_foods, chef_time):
     print(60 * "*")
     print("Least laxity first")
@@ -82,7 +91,10 @@ def least_laxity_first(list_of_foods, chef_time):
     idle_time = 0
     change_between_foods = 0
     temp_list = list_of_foods.copy()
+    last_food = None
     while i < chef_time:
+        # predict miss foods
+        predict_miss_deadline(temp_list, i)
         # check if list is empty print idle and add new foods
         if len(temp_list) == 0:
             print(f"{i} Idle.")
@@ -108,6 +120,7 @@ def least_laxity_first(list_of_foods, chef_time):
         min_food.tempCook -= 1
         # remove food if it's done
         if min_food.tempCook == 0:
+            min_food.predict = False
             min_food.priority = 0
             min_food.tempDeadline = min_food.deadline
             min_food.tempCook = min_food.cookTime
@@ -147,7 +160,10 @@ def rate_monotonic(list_of_foods, chef_time):
     idle_time = 0
     change_between_foods = 0
     temp_list = list_of_foods.copy()
+    last_food = None
     while i < chef_time:
+        # predict miss foods
+        predict_miss_deadline(temp_list, i)
         # check if list is empty print idle and add new foods
         if len(temp_list) == 0:
             print(f"{i} Idle.")
@@ -171,6 +187,8 @@ def rate_monotonic(list_of_foods, chef_time):
         min_food.tempCook -= 1
         # remove food if it's done
         if min_food.tempCook == 0:
+            min_food.predict = False
+            min_food.priority = 0
             min_food.tempDeadline = min_food.deadline
             min_food.tempCook = min_food.cookTime
             min_food.missFood = min_food.deadline
@@ -209,7 +227,10 @@ def earliest_deadline_first(list_of_foods, chef_time):
     idle_time = 0
     change_between_foods = 0
     temp_list = list_of_foods.copy()
+    last_food = None
     while i < chef_time:
+        # predict miss foods
+        predict_miss_deadline(temp_list, i)
         # check if list is empty print idle and add new foods
         if len(temp_list) == 0:
             print(f"{i} Idle.")
@@ -233,6 +254,8 @@ def earliest_deadline_first(list_of_foods, chef_time):
         min_food.tempCook -= 1
         # remove food if it's done
         if min_food.tempCook == 0:
+            min_food.predict = False
+            min_food.priority = 0
             min_food.tempDeadline = min_food.deadline
             min_food.tempCook = min_food.cookTime
             min_food.missFood = min_food.deadline
@@ -262,12 +285,55 @@ def earliest_deadline_first(list_of_foods, chef_time):
     print(f"change between foods is {change_between_foods}.")
 
 
-food1 = Food("Food1", 2, 2, 8)
-food2 = Food("Food2", 1, 3, 4)
-food3 = Food("Food3", 3, 6, 8)
+# ----------------------------------------------------------------------------------------------------------------------
+# food1 = Food("Food1", 2, 2, 8)
+# food2 = Food("Food2", 1, 3, 4)
+# food3 = Food("Food3", 3, 6, 8)
+#
+# # list for store foods
+# arr_of_foods = [food1, food2, food3]
+# ----------------------------------------------------------------------------------------------------------------------
+# # other input
+# food1 = Food("Food1", 1, 4, 8)
+# food2 = Food("Food2", 2, 2, 5)
+# food3 = Food("Food3", 4, 5, 10)
+# food4 = Food("Food4", 2, 3, 40)
+# # list for store foods
+# arr_of_foods = [food1, food2, food3, food4]
+
+# ----------------------------------------------------------------------------------------------------------------------
+food1 = Food("Food1", 3, 2, 20)
+food2 = Food("Food2", 2, 3, 5)
+food3 = Food("Food3", 2, 6, 10)
 
 # list for store foods
 arr_of_foods = [food1, food2, food3]
+
+# ----------------------------------------------------------------------------------------------------------------------
+# food1 = Food("Food1", 3, 7, 20)
+# food2 = Food("Food2", 2, 4, 5)
+# food3 = Food("Food3", 2, 8, 10)
+#
+# # list for store foods
+# arr_of_foods = [food1, food2, food3]
+
+# ----------------------------------------------------------------------------------------------------------------------
+# food1 = Food("Food1", 3, 7, 20)
+# food2 = Food("Food2", 2, 4, 5)
+# food3 = Food("Food3", 2, 8, 10)
+#
+# # list for store foods
+# arr_of_foods = [food1, food2, food3]
+
+# ----------------------------------------------------------------------------------------------------------------------
+# food1 = Food("Food1", 2, 6, 6)
+# food2 = Food("Food2", 2, 8, 8)
+# food3 = Food("Food3", 3, 10, 10)
+#
+# # list for store foods
+# arr_of_foods = [food1, food2, food3]
+
+# ----------------------------------------------------------------------------------------------------------------------
 # chef time that spend in kitchen
 chef_time_spend = calculate_chef_time(arr_of_foods)
 for food in arr_of_foods:
@@ -282,43 +348,3 @@ print(f"chef can do this order? {check_do_order(arr_of_foods, chef_time_spend)}"
 earliest_deadline_first(arr_of_foods, chef_time_spend)
 rate_monotonic(arr_of_foods, chef_time_spend)
 least_laxity_first(arr_of_foods, chef_time_spend)
-# ----------------------------------------------------------------------------------------------------------------------
-# # other input
-# food1 = Food("Food1", 1, 4, 8)
-# food2 = Food("Food2", 2, 2, 5)
-# food3 = Food("Food3", 4, 5, 10)
-# food4 = Food("Food4", 2, 3, 40)
-# # list for store foods
-# arr_of_foods = [food1, food2, food3, food4]
-
-# ---------------------------------------------
-# food1 = Food("Food1", 3, 2, 20)
-# food2 = Food("Food2", 2, 3, 5)
-# food3 = Food("Food3", 2, 6, 10)
-#
-# # list for store foods
-# arr_of_foods = [food1, food2, food3]
-
-# ------------------------------------------
-# food1 = Food("Food1", 3, 7, 20)
-# food2 = Food("Food2", 2, 4, 5)
-# food3 = Food("Food3", 2, 8, 10)
-#
-# # list for store foods
-# arr_of_foods = [food1, food2, food3]
-
-# ------------------------------------------
-# food1 = Food("Food1", 3, 7, 20)
-# food2 = Food("Food2", 2, 4, 5)
-# food3 = Food("Food3", 2, 8, 10)
-#
-# # list for store foods
-# arr_of_foods = [food1, food2, food3]
-
-# -----------------------------------------
-# food1 = Food("Food1", 2, 6, 6)
-# food2 = Food("Food2", 2, 8, 8)
-# food3 = Food("Food3", 3, 10, 10)
-#
-# # list for store foods
-# arr_of_foods = [food1, food2, food3]
