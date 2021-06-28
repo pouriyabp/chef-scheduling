@@ -20,6 +20,11 @@ class Food:
 
     # initializer (for each scheduling function we should use this)
     def set_value(self):
+        """
+        set initial value like __init__
+        use this function at start of each scheduling algorithm.
+        :return: nothing return ---> only set value to class attributes
+        """
         self.predict = False
         self.priority = 0
         self.lastEnter = 0
@@ -29,16 +34,34 @@ class Food:
         self.tempDeadline = int(self.deadline)
 
     def set_priority_for_llf(self):
+        """
+        set priority for least laxity first
+        :return: nothing return ---> set priority of each food
+        """
         self.priority = self.tempDeadline - self.tempCook
 
     def set_priority_for_edf(self):
+        """
+        set priority for earliest deadline first
+        :return: nothing return ---> set priority of each food
+        """
         self.priority = self.tempDeadline
 
     def set_priority_for_rate_monotonic(self):
+        """
+        set priority for rate monotonic
+        :return: nothing return ---> set priority of each food
+        """
         self.priority = self.period
 
 
 def lcm(x, y):
+    """
+    calculate the LCM between 2 number
+    :param x: first number
+    :param y: second number
+    :return: the LCM between x and y
+    """
     if x > y:
         greater = x
     else:
@@ -105,6 +128,20 @@ def predict_miss_deadline(list_temp_foods, round):
 
 
 def least_laxity_first(list_of_foods, chef_time):
+    """
+    least laxity first scheduling algorithm.
+    this algorithm priority is tempDeadline - tempCook that use set_priority_for_llf function in Food class.
+    in first check if list is empty the chef is idle and increase round and check new foods must come in new round.
+    next get food with minimum priority and decrease tempCook and if tempCook is 0 that means the food is done so
+    remove the food from list.
+    each round decrease tempDeadline and miss food for find use them in predict miss food and find miss food.
+    save food in last_food to find changes between foods if last_food is changed and tempCook is not equal to original
+    cook time.
+    at the end calculate the new foods that must come in new round.
+    :param list_of_foods: list of food that chef must cook.
+    :param chef_time: maximum time that chef in kitchen.
+    :return: nothing return ---> print in terminal
+    """
     print(60 * "*")
     print("Least laxity first")
     # set value
@@ -174,6 +211,20 @@ def least_laxity_first(list_of_foods, chef_time):
 
 
 def rate_monotonic(list_of_foods, chef_time):
+    """
+    rate monotonic scheduling algorithm.
+    this algorithm priority is minimum period between foods.
+    in first check if list is empty the chef is idle and increase round and check new foods must come in new round.
+    next get food with minimum period and decrease tempCook and if tempCook is 0 that means the food is done so
+    remove the food from list.
+    each round decrease tempDeadline and miss food for find use them in predict miss food and find miss food.
+    save food in last_food to find changes between foods if last_food is changed and tempCook is not equal to original
+    cook time.
+    at the end calculate the new foods that must come in new round.
+    :param list_of_foods: list of food that chef must cook.
+    :param chef_time: maximum time that chef in kitchen.
+    :return: nothing return ---> print in terminal
+    """
     print(60 * "*")
     print("Rate monotonic")
     # set value
@@ -243,6 +294,20 @@ def rate_monotonic(list_of_foods, chef_time):
 
 
 def earliest_deadline_first(list_of_foods, chef_time):
+    """
+    earliest deadline first scheduling algorithm.
+    this algorithm priority is minimum deadline between foods.
+    in first check if list is empty the chef is idle and increase round and check new foods must come in new round.
+    next get food with minimum priority and decrease tempCook and if tempCook is 0 that means the food is done so
+    remove the food from list.
+    each round decrease tempDeadline and miss food for find use them in predict miss food and find miss food.
+    save food in last_food to find changes between foods if last_food is changed and tempCook is not equal to original
+    cook time.
+    at the end calculate the new foods that must come in new round.
+    :param list_of_foods: list of food that chef must cook.
+    :param chef_time: maximum time that chef in kitchen.
+    :return: nothing return ---> print in terminal
+    """
     print(60 * "*")
     print("Earliest deadline first")
     # set value
@@ -313,6 +378,17 @@ def earliest_deadline_first(list_of_foods, chef_time):
     print(f"change between foods is {change_between_foods}.")
 
 
+def get_user_input(list_of_food):
+    n = int(input("Enter number of foods:"))
+    for num in range(n):
+        user_input = input(f"{num + 1} Enter food name, cook time, deadline and period in order: ")
+        user_input.replace(",", "")
+        user_input = user_input.split(" ")
+        user_food = Food(user_input[0], user_input[1], user_input[2], user_input[3])
+        list_of_food.append(user_food)
+    print(list_of_food)
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 # food1 = Food("Food1", 2, 2, 8)
 # food2 = Food("Food2", 1, 3, 4)
@@ -330,12 +406,12 @@ def earliest_deadline_first(list_of_foods, chef_time):
 # arr_of_foods = [food1, food2, food3, food4]
 
 # ----------------------------------------------------------------------------------------------------------------------
-food1 = Food("Food1", 3, 2, 20)
-food2 = Food("Food2", 2, 3, 5)
-food3 = Food("Food3", 2, 6, 10)
-
-# list for store foods
-arr_of_foods = [food1, food2, food3]
+# food1 = Food("Food1", 3, 2, 20)
+# food2 = Food("Food2", 2, 3, 5)
+# food3 = Food("Food3", 2, 6, 10)
+#
+# # list for store foods
+# arr_of_foods = [food1, food2, food3]
 
 # ----------------------------------------------------------------------------------------------------------------------
 # food1 = Food("Food1", 3, 7, 20)
@@ -362,6 +438,10 @@ arr_of_foods = [food1, food2, food3]
 # arr_of_foods = [food1, food2, food3]
 
 # ----------------------------------------------------------------------------------------------------------------------
+# get user input
+arr_of_foods = []
+get_user_input(arr_of_foods)
+
 # chef time that spend in kitchen
 chef_time_spend = calculate_chef_time(arr_of_foods)
 for food in arr_of_foods:
